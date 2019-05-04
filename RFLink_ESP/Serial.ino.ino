@@ -87,8 +87,12 @@ void Process_Serial () {
     // *********************************************
     if ( ( InputBuffer_Serial[0] == 'X' ) && ( Learning_Mode == 1 ) ) {
       if ( Unknown_Device_ID.length() > 0 ) {
+#ifdef ARDUINO
+        Serial.println ("File operations not supported on Arduino");
+#else
         RFLink_File.Add_Device ( Unknown_Device_ID ) ;
         RFLink_File.Print_Devices () ;
+#endif
       }
     }
 
@@ -96,8 +100,12 @@ void Process_Serial () {
     // *********************************************
     else if ( ( InputBuffer_Serial[0] == 'Y' ) && ( Learning_Mode == 1 ) ) {
       if ( Unknown_Device_ID.length() > 0 ) {
+#ifdef ARDUINO
+        Serial.println ("File operations not supported on Arduino");
+#else
         RFLink_File.Add_Device ( "-" + Unknown_Device_ID ) ;
         RFLink_File.Print_Devices () ;
+#endif
       } 
 //      Unknown_Device_ID = Randomize_Device_ID ( Unknown_Device_ID ) ;
 //      if ( Unknown_Device_ID.length() > 0 ) {
@@ -119,7 +127,8 @@ void Process_Serial () {
       // LIST all Commands
       // *********************************************
       if ( strcasecmp ( InputBuffer_Serial+3, "LIST;" ) == 0 ) {
-        Serial.printf  ( InputBuffer_Serial, "20;%02X;LIST;\r\n", PKSequenceNumber++ ) ;
+        sprintf ( InputBuffer_Serial, "20;%02X;LIST;\r\n", PKSequenceNumber++ ) ;
+        Serial.println ( InputBuffer_Serial ) ;
         Serial.println ( Commands_Text ) ;
         Serial.println ( Learning_Modes_Text ) ;
       }
@@ -138,14 +147,19 @@ void Process_Serial () {
       // REBOOT
       // *********************************************
       else if ( strcasecmp ( InputBuffer_Serial+3, "REBOOT;" ) == 0 ) {
+#ifdef ARDUINO
+        Serial.println ("Reboot not supported on Arduino");
+#else
         ESP.restart () ;
+#endif
       }
 
       // *********************************************
       // VERSION
       // *********************************************
       else if ( strcasecmp ( InputBuffer_Serial+3, "VERSION;" ) == 0 ) {
-        Serial.printf ( "20;%02X;VER=%s;REV=%02x;BUILD=%02x;\r\n", PKSequenceNumber++, Version, Revision, Build ) ; 
+        sprintf ( InputBuffer_Serial, "20;%02X;VER=%s;REV=%02x;BUILD=%02x;\r\n", PKSequenceNumber++, Version, Revision, Build ) ;
+        Serial.println ( InputBuffer_Serial ) ;
       }
 
       // *********************************************
@@ -166,7 +180,11 @@ void Process_Serial () {
         // *********************************************
         // *********************************************
         if ( Learning_Mode == 1 ) {
+#ifdef ARDUINO
+          Serial.println ("File operations not supported on Arduino");
+#else
           RFLink_File.Print_Devices () ;
+#endif
         }
         
         // *********************************************
@@ -227,12 +245,17 @@ void Process_Serial () {
         //10;EV1527;0005df;2;ON
         if ( RFL_Protocols.Home_Command ( InputBuffer_Serial ) ){
           if ( Home_Automation == "MQTT" ) {
+#ifdef ARDUINO
+            Serial.println("MQTT not supported on Arduino");
+#else
             Received_MQTT_Topic.replace ( "from_HA", "from_RFLink" ) ;
             MQTT_Client.publish ( Received_MQTT_Topic.c_str(), Received_MQTT_Payload.c_str() );
+#endif
           }
           //else if ( Home_Automation == "RS232" ) {
           else {
-            Serial.printf ( "20;%02X;OK;\r\n", PKSequenceNumber++ ) ;  
+            sprintf ( InputBuffer_Serial, "20;%02X;OK;\r\n", PKSequenceNumber++ ) ;
+            Serial.println ( InputBuffer_Serial ) ;
           }
         }
       }
@@ -249,8 +272,12 @@ void Process_Serial () {
       x1     = Command.indexOf ( ";", x1+1 ) ;
       String New = Command.substring ( 3, x1+1 ) ;
 
+#ifdef ARDUINO
+        Serial.println ("File operations not supported on Arduino");
+#else
       RFLink_File.Add_Device ( New ) ;
       RFLink_File.Print_Devices () ;
+#endif
     }
 
     // *********************************************
@@ -268,6 +295,9 @@ void Process_Serial () {
       //Serial.println ( CMD ) ;
       //Serial.println ( ARG ) ;
 
+#ifdef ARDUINO
+      Serial.println ("File operations not supported on Arduino");
+#else
       if ( CMD.equalsIgnoreCase ( "DIR" ) ) {
         RFLink_File.DirList () ;
       } 
@@ -284,6 +314,7 @@ void Process_Serial () {
         RFLink_File.Remove_Device ( Rest ) ;
         RFLink_File.Print_Devices () ;
       }
+#endif
     }
     
     // *********************************************

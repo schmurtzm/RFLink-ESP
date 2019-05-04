@@ -7,8 +7,12 @@
 #define Revision  0x01
 #define Build     0x01
 
+#ifdef ARDUINO
+#define Home_Automation  "RS232"
+#else
 #define Home_Automation  "MQTT"
 //#define Home_Automation  "RS232"
+#endif
 
 // ****************************************************************************
 // used in Raw signal
@@ -61,9 +65,10 @@ String        Unknown_Device_ID   = ""    ;
 // ***********************************************************************************
 // File with the device registrations
 // ***********************************************************************************
+#ifndef ARDUINO
 #include "RFLink_File.h"
 _RFLink_File  RFLink_File ; // ( "/RFLink.txt" ) ;
-
+#endif
 
 
 
@@ -84,6 +89,7 @@ unsigned long Send_Time_ms   = 10000 ;
 #include "Sensor_Receiver_2.h"
 // */
 
+#ifndef ARDUINO
 String MQTT_ID = "RFLink-ESP" ;
 String Topic   = "ha/from_HA/" ;
 #include <WiFi.h>
@@ -94,6 +100,7 @@ PubSubClient MQTT_Client ( My_WifiClient ) ;
 
 String Received_MQTT_Topic   ;
 String Received_MQTT_Payload ;
+#endif
 
 
 
@@ -112,7 +119,7 @@ String Received_MQTT_Payload ;
 // ***********************************************************************************
 #include "RFL_Protocols.h" 
 
-
+#ifndef ARDUINO
 // ***********************************************************************************
 // ***********************************************************************************
 void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
@@ -173,6 +180,7 @@ void MQTT_Reconnect() {
     }
   }
 }
+#endif
 
 
 // ***********************************************************************************
@@ -180,6 +188,7 @@ void MQTT_Reconnect() {
 void setup() {
   Serial.begin ( 57600 ) ;                    
 
+#ifndef ARDUINO
   RFLink_File.Begin () ;
 
   WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
@@ -190,7 +199,7 @@ void setup() {
 
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
-  
+#endif
   
   pinMode      ( RECEIVE_PIN,  INPUT        ) ;
   pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
@@ -204,8 +213,9 @@ void setup() {
   // ************************************************************************
 
   delay ( 200 ) ;
-  Serial.printf ( "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", 
+  sprintf(pbuffer, "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n",
                   PKSequenceNumber++, Version, Revision );
+  Serial.print(pbuffer);
 
   RawSignal.Time = millis() ;
 }
@@ -214,15 +224,15 @@ void setup() {
 // ***********************************************************************************
 // ***********************************************************************************
 void loop () {
+#ifndef ARDUINO
   if ( !MQTT_Client.connected () ) {
     MQTT_Reconnect () ;
   }
   MQTT_Client.loop ();
-
+#endif
   
   if ( FetchSignal () ) {
     RFL_Protocols.Decode ();
   }
   Collect_Serial () ;
 }
-

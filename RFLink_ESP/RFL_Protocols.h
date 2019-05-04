@@ -6,7 +6,9 @@
 #ifndef RFL_Protocols_h
 #define RFL_Protocols_h   0.2
 
+#ifndef ARDUINO
 #include <vector>
+#endif
 
 
 // ***********************************************************************************
@@ -37,6 +39,9 @@ unsigned long HexString_2_Long ( String HexString ) {
 #include "Protocols/RFL_Protocol_KAKU.h"
 #include "Protocols/RFL_Protocol_Paget_Door_Chime.h"
 
+#ifdef ARDUINO
+#define MAX_PROTOCOL_COUNT 8
+#endif
 
 // *************************************************************************
 // *************************************************************************
@@ -46,6 +51,9 @@ class _RFL_Protocols {
     // ***********************************************************************
     // ***********************************************************************
     _RFL_Protocols (){
+#ifdef ARDUINO
+      _RFL_Protocol_Count = 0;
+#endif
       // *************************************** 
       // Add the first (Pre-Processing) protocol
       // *************************************** 
@@ -58,12 +66,20 @@ class _RFL_Protocols {
       // *************************************** 
       // append the protocol to the protocol list
       // *************************************** 
+#ifdef ARDUINO
+      if (_RFL_Protocol_Count >= MAX_PROTOCOL_COUNT)
+        return ;
+      _RFL_Protocol_List[_RFL_Protocol_Count] = RFL_Protocol ;
+      _RFL_Protocol_Count++ ;
+      RFL_Protocol->ID = _RFL_Protocol_Count ;
+#else
       _RFL_Protocol_List.push_back ( RFL_Protocol ) ;
 
       // *************************************** 
       // Set an unique ID for each protocol
       // *************************************** 
       RFL_Protocol->ID = _RFL_Protocol_List.size() ;
+#endif
     }
 
     // ***********************************************************************
@@ -242,7 +258,12 @@ class _RFL_Protocols {
     // ***********************************************************************
     // ***********************************************************************
     private :
+#ifdef ARDUINO
+      _RFL_Protocol_BaseClass* _RFL_Protocol_List[MAX_PROTOCOL_COUNT];
+      int _RFL_Protocol_Count;
+#else
       std::vector <_RFL_Protocol_BaseClass*> _RFL_Protocol_List ;
+#endif
 };
 
 // ********************************************************************************

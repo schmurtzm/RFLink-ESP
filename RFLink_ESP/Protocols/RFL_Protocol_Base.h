@@ -25,6 +25,9 @@ String Randomize_Device_ID ( String Device_ID ) {
 // ***********************************************************************************
 // ***********************************************************************************
 bool Unknown_Device ( String Device ) {
+#ifdef ARDUINO
+  int pos = -1;
+#else
   int pos = RFLink_File.Known_Devices.indexOf ( Device ) ;
   // *******************************************************************
   // If there's a mius sign before the Device name,
@@ -34,6 +37,7 @@ bool Unknown_Device ( String Device ) {
     String New = Randomize_Device_ID ( Device ) ;
     sprintf ( pbuffer, New.c_str() ) ;
   }  
+#endif
 
   if ( pos  < 0 )  {
     if ( Learning_Mode == 0 ) return true ;
@@ -70,6 +74,7 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
   if ( Unknown_Device ( pbuffer ) ) return false ;
 
   if ( Home_Automation == "MQTT" ) {
+#ifndef ARDUINO
     String Topic = "ha/from_RFLink/" + Name + "_" ;
     sprintf ( pbuffer, "%05X", Id ) ;
     Topic += String ( pbuffer ) ;
@@ -81,6 +86,7 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
     Serial.println ( "MQTT Send     Topic: " + Topic + "   Payload: " + Payload ) ;
     
     MQTT_Client.publish ( Topic.c_str(), Payload.c_str() );
+#endif
   }
   // **********************************************************  
   // Send an MQTT Message
