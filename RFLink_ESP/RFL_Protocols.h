@@ -41,6 +41,33 @@ unsigned long HexString_2_Long ( String HexString ) {
 
 #ifdef ARDUINO
 #define MAX_PROTOCOL_COUNT 8
+class ProtocolList
+{
+    public:
+        ProtocolList() : _RFL_Protocol_Count(0) {
+        }
+
+        void Add(_RFL_Protocol_BaseClass* RFL_Protocol) {
+            if (_RFL_Protocol_Count >= MAX_PROTOCOL_COUNT)
+                return ;
+            _RFL_Protocol_List[_RFL_Protocol_Count] = RFL_Protocol ;
+            _RFL_Protocol_Count++ ;
+        }
+
+        _RFL_Protocol_BaseClass** begin() const {
+            return _RFL_Protocol_List;
+        }
+
+        _RFL_Protocol_BaseClass** end() const {
+            return _RFL_Protocol_List + _RFL_Protocol_Count;
+        }
+
+        int size() const { return _RFL_Protocol_Count; };
+
+    private:
+        _RFL_Protocol_BaseClass* _RFL_Protocol_List[MAX_PROTOCOL_COUNT];
+        int _RFL_Protocol_Count;
+};
 #endif
 
 // *************************************************************************
@@ -51,9 +78,6 @@ class _RFL_Protocols {
     // ***********************************************************************
     // ***********************************************************************
     _RFL_Protocols (){
-#ifdef ARDUINO
-      _RFL_Protocol_Count = 0;
-#endif
       // *************************************** 
       // Add the first (Pre-Processing) protocol
       // *************************************** 
@@ -67,19 +91,15 @@ class _RFL_Protocols {
       // append the protocol to the protocol list
       // *************************************** 
 #ifdef ARDUINO
-      if (_RFL_Protocol_Count >= MAX_PROTOCOL_COUNT)
-        return ;
-      _RFL_Protocol_List[_RFL_Protocol_Count] = RFL_Protocol ;
-      _RFL_Protocol_Count++ ;
-      RFL_Protocol->ID = _RFL_Protocol_Count ;
+      _RFL_Protocol_List.Add(RFL_Protocol);
 #else
       _RFL_Protocol_List.push_back ( RFL_Protocol ) ;
+#endif
 
       // *************************************** 
       // Set an unique ID for each protocol
       // *************************************** 
       RFL_Protocol->ID = _RFL_Protocol_List.size() ;
-#endif
     }
 
     // ***********************************************************************
@@ -259,8 +279,7 @@ class _RFL_Protocols {
     // ***********************************************************************
     private :
 #ifdef ARDUINO
-      _RFL_Protocol_BaseClass* _RFL_Protocol_List[MAX_PROTOCOL_COUNT];
-      int _RFL_Protocol_Count;
+      ProtocolList _RFL_Protocol_List ;
 #else
       std::vector <_RFL_Protocol_BaseClass*> _RFL_Protocol_List ;
 #endif
