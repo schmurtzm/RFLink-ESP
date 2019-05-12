@@ -59,7 +59,7 @@ boolean FetchSignal () {
   unsigned long numloops             ;   // 3320 i.p.v. 4200
   bool          Start_Level   = LOW  ;   // via #define maakt niet uit
   //unsigned      maxloops      = ( SIGNAL_TIMEOUT * LoopsPerMilli );  // via #define maakt niet uit
-  int          maxTime          = ( SIGNAL_TIMEOUT * 1000);
+  const unsigned long          maxTime          = ( SIGNAL_TIMEOUT * 1000);
   unsigned long timeStartLoop;
   // ******************************************************************************************
 

@@ -7,8 +7,12 @@
 #define Revision  0x01
 #define Build     0x01
 
-//#define Home_Automation  "MQTT"
-#define Home_Automation  "RS232"
+#ifdef __AVR_ATmega2560__
+  #define RS232 
+#else
+  //#define MQTT
+  #define RS232
+#endif
 
 // ****************************************************************************
 // used in Raw signal
@@ -34,7 +38,7 @@ byte          PKSequenceNumber = 0 ;  // 1 byte packet counter
 
 char          PreFix [20]              ;
 unsigned long Last_Detection_Time = 0L ;
-int           Learning_Mode       = 1  ;  // always start in production mode
+int           Learning_Mode       = 1  ;  // normally always start in production mode 0 //
 
 char          pbuffer  [ 60 ] ;           // Buffer for printing data
 char          pbuffer2 [ 30 ] ;
@@ -57,16 +61,29 @@ int           SerialInByteCounter = 0     ;  // number of bytes counter
 byte          SerialInByte                ;  // incoming character value
 String        Unknown_Device_ID   = ""    ;
 
+// ***********************************************************************************
+// Hardware pins
+// ***********************************************************************************
+  #ifdef __AVR_ATmega2560__
+    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
+    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.    
+  #elif ESP32
+    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
+    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
+  #elif ESP8266
+    #define TRANSMIT_PIN    2    // Data to the 433Mhz transmitter on this pin
+    #define RECEIVE_PIN    4    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
+  #endif
 
 // ***********************************************************************************
 // File with the device registrations
 // ***********************************************************************************
-/*
-#include "RFLink_File.h"
-_RFLink_File  RFLink_File ; // ( "/RFLink.txt" ) ;
+#ifndef __AVR_ATmega2560__
+  #include "RFLink_File.h"
+ _RFLink_File  RFLink_File ; // ( "/RFLink.txt" ) ;
 
 
-*/
+
 
 
 // ***********************************************************************************
@@ -85,7 +102,7 @@ unsigned long Send_Time_ms   = 10000 ;
 #include "Sensor_Receiver_2.h"
 // */
 
-/*
+
 String MQTT_ID = "RFLink-ESP" ;
 String Topic   = "ha/from_HA/" ;
 #include <WiFi.h>
@@ -96,34 +113,22 @@ PubSubClient MQTT_Client ( My_WifiClient ) ;
 
 String Received_MQTT_Topic   ;
 String Received_MQTT_Payload ;
-*/
 
 
-// ***********************************************************************************
-// Hardware pins
-// ***********************************************************************************
-  #ifdef __AVR_ATmega2560__
-    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.    
-  #elif ESP32
-    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
-  #elif ESP8266
-    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    4    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
-  #endif
+
+
 
 
 
 // ***********************************************************************************
 // ***********************************************************************************
-/*
+
 #include "RFL_Protocols.h" 
-*/
+
 
 // ***********************************************************************************
 // ***********************************************************************************
-/*
+
 void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
   String Payload = "" ;
   for ( int i = 0; i < length; i++ ) {
@@ -156,11 +161,11 @@ void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
   Line.toCharArray ( InputBuffer_Serial, sizeof ( InputBuffer_Serial ) ) ;
   Process_Serial () ;
 }
-*/
+
 
 /* ***********************************************************************
 *********************************************************************** */
-/*
+
 void MQTT_Reconnect() {
   // Loop until we're reconnected
   while ( !MQTT_Client.connected() ) {
@@ -183,17 +188,23 @@ void MQTT_Reconnect() {
     }
   }
 }
-*/
+#endif
 
 // ***********************************************************************************
 // ***********************************************************************************
 void setup() {
-  Serial.begin ( 57600 ) ;                    
+  Serial.begin ( 57600 ) ;  
 
-/*
+  pinMode      ( RECEIVE_PIN,  INPUT        ) ;
+  pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
+  digitalWrite ( RECEIVE_PIN,  INPUT_PULLUP ) ;  // pull-up resister on (to prevent garbage)
+
+#ifndef __AVR_ATmega2560__
+
+
   RFLink_File.Begin () ;
-*/
-/*
+
+
   WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
   while ( WiFi.status () != WL_CONNECTED ) {
     delay ( 500 ) ;
@@ -202,27 +213,23 @@ void setup() {
 
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
-  */
-  
-  pinMode      ( RECEIVE_PIN,  INPUT        ) ;
-  pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
-  digitalWrite ( RECEIVE_PIN,  INPUT_PULLUP ) ;  // pull-up resister on (to prevent garbage)
 
-/*
+
+
+
   // *********   PROTOCOL CLASSES, available and in this order   ************
   RFL_Protocols.Add ( new _RFL_Protocol_KAKU             () ) ;  
   RFL_Protocols.Add ( new _RFL_Protocol_EV1527           () ) ;  
   RFL_Protocols.Add ( new _RFL_Protocol_Paget_Door_Chime () ) ;  
   RFL_Protocols.setup () ;
   // ************************************************************************
-*/
-  delay ( 200 ) ;
-  //Serial.print(printf ( "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", 
-//                  PKSequenceNumber++, Version, Revision ));
-
-#ifdef ARDUINO
-  Serial.println("arduino");
 #endif
+
+  delay ( 200 ) ;
+
+  sprintf ( pbuffer, "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", 
+                 PKSequenceNumber++, Version, Revision );
+  Serial.print ( pbuffer ) ; 
 
   RawSignal.Time = millis() ;
 }
@@ -232,14 +239,19 @@ void setup() {
 // ***********************************************************************************
 void loop () {
 
-  /*
+#ifndef __AVR_ATmega2560__
   if ( !MQTT_Client.connected () ) {
     MQTT_Reconnect () ;
   }
   MQTT_Client.loop ();
-*/
 
   
+  if ( FetchSignal () ) {
+    RFL_Protocols.Decode ();
+  }
+  Collect_Serial () ;
+
+#else
   if ( FetchSignal () ) {
     //RFL_Protocols.Decode ();
     int Time ;
@@ -256,5 +268,8 @@ void loop () {
         }
         Serial.println ( ";" ) ;
   }
-  //Collect_Serial () ;
+  
+#endif
+  
+
 }

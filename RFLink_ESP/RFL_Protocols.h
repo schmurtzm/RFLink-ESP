@@ -6,7 +6,7 @@
 #ifndef RFL_Protocols_h
 #define RFL_Protocols_h   0.2
 
-#ifndef ARDUINO
+#ifndef __AVR_ATmega2560__
 #include <vector>
 #endif
 
@@ -39,7 +39,7 @@ unsigned long HexString_2_Long ( String HexString ) {
 #include "Protocols/RFL_Protocol_KAKU.h"
 #include "Protocols/RFL_Protocol_Paget_Door_Chime.h"
 
-#ifdef ARDUINO
+#ifdef __AVR_ATmega2560__
 #define MAX_PROTOCOL_COUNT 8
 class ProtocolList
 {
@@ -90,7 +90,7 @@ class _RFL_Protocols {
       // *************************************** 
       // append the protocol to the protocol list
       // *************************************** 
-#ifdef ARDUINO
+#ifdef __AVR_ATmega2560__
       _RFL_Protocol_List.Add(RFL_Protocol);
 #else
       _RFL_Protocol_List.push_back ( RFL_Protocol ) ;
@@ -278,7 +278,7 @@ class _RFL_Protocols {
     // ***********************************************************************
     // ***********************************************************************
     private :
-#ifdef ARDUINO
+#ifdef __AVR_ATmega2560__
       ProtocolList _RFL_Protocol_List ;
 #else
       std::vector <_RFL_Protocol_BaseClass*> _RFL_Protocol_List ;
@@ -291,4 +291,3 @@ class _RFL_Protocols {
 _RFL_Protocols RFL_Protocols ;
 
 #endif
-

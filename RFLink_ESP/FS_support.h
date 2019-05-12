@@ -4,7 +4,7 @@
 #ifndef FS_support_h
 #define FS_support_h   0.1
 
-#ifndef ARDUINO
+#ifndef __AVR_ATmega2560__
 #include "FS.h"
 #endif
 

@@ -73,8 +73,7 @@ Name      ID      Switch   CMD     extra
 bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String On_Off, String Extra="" ) {
   if ( Unknown_Device ( pbuffer ) ) return false ;
 
-  if ( Home_Automation == "MQTT" ) {
-#ifndef ARDUINO
+#ifdef MQTT
     String Topic = "ha/from_RFLink/" + Name + "_" ;
     sprintf ( pbuffer, "%05X", Id ) ;
     Topic += String ( pbuffer ) ;
@@ -86,13 +85,13 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
     Serial.println ( "MQTT Send     Topic: " + Topic + "   Payload: " + Payload ) ;
     
     MQTT_Client.publish ( Topic.c_str(), Payload.c_str() );
-#endif
-  }
+#else
+  
   // **********************************************************  
   // Send an MQTT Message
   //      ha/from_HA/ev1527_005df     S02
   // **********************************************************  
-  else {
+
     sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
     
     Serial.print   ( PreFix ) ;
@@ -104,7 +103,7 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
     }
     Serial.println () ;    
     PKSequenceNumber += 1 ;
-  }
+#endif
   return true ;
 }
 
