@@ -10,8 +10,8 @@
 #ifdef __AVR_ATmega2560__
   #define RS232 
 #else
-  //#define MQTT
-  #define RS232
+  #define MQTT
+  //#define RS232
 #endif
 
 // ****************************************************************************
@@ -205,21 +205,20 @@ void setup() {
   pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
   digitalWrite ( RECEIVE_PIN,  INPUT_PULLUP ) ;  // pull-up resister on (to prevent garbage)
 
-#ifndef __AVR_ATmega2560__
+#ifdef MQTT
 
 
   RFLink_File.Begin () ;
 
-/*
+
   WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
   while ( WiFi.status () != WL_CONNECTED ) {
     delay ( 500 ) ;
-    //Serial.print ( "." ) ;
+    Serial.print ( "." ) ;
   }
 
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
-*/
 
 
 
@@ -247,11 +246,11 @@ void setup() {
 void loop () {
 
 #ifndef __AVR_ATmega2560__
-/*  if ( !MQTT_Client.connected () ) {
+  if ( !MQTT_Client.connected () ) {
     MQTT_Reconnect () ;
   }
   MQTT_Client.loop ();
-*/
+
   
   if ( FetchSignal () ) {
     RFL_Protocols.Decode ();
@@ -259,6 +258,14 @@ void loop () {
   Collect_Serial () ;
 
 #else
+
+/*
+    if ( FetchSignal () ) {
+    RFL_Protocols.Decode ();
+  }
+  Collect_Serial () ;
+*/
+ 
   if ( FetchSignal () ) {
     //RFL_Protocols.Decode ();
     int Time ;
@@ -275,7 +282,7 @@ void loop () {
         }
         Serial.println ( ";" ) ;
   }
-  
+ 
 #endif
   
 
