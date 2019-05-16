@@ -25,7 +25,7 @@ String Randomize_Device_ID ( String Device_ID ) {
 // ***********************************************************************************
 // ***********************************************************************************
 bool Unknown_Device ( String Device ) {
-#ifdef ARDUINO
+#ifdef __AVR_ATmega2560__
   int pos = -1;
 #else
   int pos = RFLink_File.Known_Devices.indexOf ( Device ) ;
@@ -41,14 +41,14 @@ bool Unknown_Device ( String Device ) {
 
   if ( pos  < 0 )  {
     if ( Learning_Mode == 0 ) return true ;
-    else {
+    else {/*
       Serial.print   ( "Unknown Device: 12;" ) ;
       Serial.print   ( pbuffer ) ;
       Serial.print   ( "   ") ;
-      Serial.println ( millis() );
+      Serial.println ( millis() );*/
       Unknown_Device_ID = pbuffer ;
       return true ;
-    }
+     }
   }
   return false ;
 }
@@ -71,7 +71,7 @@ Name      ID      Switch   CMD     extra
 */
 // ***********************************************************************************
 bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String On_Off, String Extra="" ) {
-  if ( Unknown_Device ( pbuffer ) ) return false ;
+  if ( Unknown_Device ( pbuffer ) && Learning_Mode == 0) return false ;
 
 #ifdef MQTT
     String Topic = "ha/from_RFLink/" + Name + "_" ;

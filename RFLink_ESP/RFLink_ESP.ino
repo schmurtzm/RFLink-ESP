@@ -105,7 +105,13 @@ unsigned long Send_Time_ms   = 10000 ;
 
 String MQTT_ID = "RFLink-ESP" ;
 String Topic   = "ha/from_HA/" ;
-#include <WiFi.h>
+
+#ifdef ESP32
+ #include <WiFi.h>
+#elif ESP8266
+ #include <ESP8266WiFi.h>
+#endif
+
 #include "PubSubClient.h"
 #include "Wifi_Settings_ESP32.h"
 WiFiClient My_WifiClient ;
@@ -204,7 +210,7 @@ void setup() {
 
   RFLink_File.Begin () ;
 
-
+/*
   WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
   while ( WiFi.status () != WL_CONNECTED ) {
     delay ( 500 ) ;
@@ -213,7 +219,7 @@ void setup() {
 
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
-
+*/
 
 
 
@@ -226,6 +232,7 @@ void setup() {
 #endif
 
   delay ( 200 ) ;
+
 
   sprintf ( pbuffer, "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", 
                  PKSequenceNumber++, Version, Revision );
@@ -240,11 +247,11 @@ void setup() {
 void loop () {
 
 #ifndef __AVR_ATmega2560__
-  if ( !MQTT_Client.connected () ) {
+/*  if ( !MQTT_Client.connected () ) {
     MQTT_Reconnect () ;
   }
   MQTT_Client.loop ();
-
+*/
   
   if ( FetchSignal () ) {
     RFL_Protocols.Decode ();
