@@ -7,6 +7,7 @@
 #define Revision  0x01
 #define Build     0x01
 
+
 #ifdef __AVR_ATmega2560__
   #define RS232 
 #else
@@ -75,6 +76,7 @@ String        Unknown_Device_ID   = ""    ;
     #define RECEIVE_PIN    4    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
   #endif
 
+
 // ***********************************************************************************
 // File with the device registrations
 // ***********************************************************************************
@@ -125,15 +127,9 @@ String Received_MQTT_Payload ;
 
 
 
-
 // ***********************************************************************************
 // ***********************************************************************************
 
-#include "RFL_Protocols.h" 
-
-
-// ***********************************************************************************
-// ***********************************************************************************
 
 void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
   String Payload = "" ;
@@ -196,6 +192,8 @@ void MQTT_Reconnect() {
 }
 #endif
 
+#include "RFL_Protocols.h" 
+
 // ***********************************************************************************
 // ***********************************************************************************
 void setup() {
@@ -220,7 +218,7 @@ void setup() {
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
 
-
+#endif
 
   // *********   PROTOCOL CLASSES, available and in this order   ************
   RFL_Protocols.Add ( new _RFL_Protocol_KAKU             () ) ;  
@@ -228,7 +226,7 @@ void setup() {
   RFL_Protocols.Add ( new _RFL_Protocol_Paget_Door_Chime () ) ;  
   RFL_Protocols.setup () ;
   // ************************************************************************
-#endif
+
 
   delay ( 200 ) ;
 
@@ -245,27 +243,19 @@ void setup() {
 // ***********************************************************************************
 void loop () {
 
-#ifndef __AVR_ATmega2560__
+#ifdef MQTT
   if ( !MQTT_Client.connected () ) {
     MQTT_Reconnect () ;
   }
   MQTT_Client.loop ();
-
+#endif
   
   if ( FetchSignal () ) {
     RFL_Protocols.Decode ();
   }
   Collect_Serial () ;
-
-#else
-
-/*
-    if ( FetchSignal () ) {
-    RFL_Protocols.Decode ();
-  }
-  Collect_Serial () ;
-*/
  
+/*
   if ( FetchSignal () ) {
     //RFL_Protocols.Decode ();
     int Time ;
@@ -282,8 +272,8 @@ void loop () {
         }
         Serial.println ( ";" ) ;
   }
- 
-#endif
+*/ 
+
   
 
 }
