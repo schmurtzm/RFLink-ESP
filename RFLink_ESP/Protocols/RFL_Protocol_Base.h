@@ -90,14 +90,19 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
   // **********************************************************  
   // Send an MQTT Message
   //      ha/from_HA/ev1527_005df     S02
-  // **********************************************************  
+  // ********************************************************** 
 
     sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
     
     Serial.print   ( PreFix ) ;
     Serial.print   ( pbuffer ) ;
-    sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
+    /*sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
+    Serial.print ( pbuffer2 ) ;*/
+    sprintf ( pbuffer2, "SWITCH=%0X;CMD=", Switch) ;//for some reason On_Off is not printed with the lines above
     Serial.print ( pbuffer2 ) ;
+    Serial.print(On_Off);
+    Serial.print(";"); 
+
     if ( Extra.length() > 0 ) {
       Serial.print ( Extra + ";" ) ;
     }
