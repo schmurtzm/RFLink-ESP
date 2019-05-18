@@ -11,8 +11,8 @@
 #ifdef __AVR_ATmega2560__
   #define RS232 
 #else
-  #define MQTT
-  //#define RS232
+  //#define MQTT
+  #define RS232
 #endif
 
 // ****************************************************************************
@@ -202,6 +202,8 @@ void setup() {
   pinMode      ( RECEIVE_PIN,  INPUT        ) ;
   pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
   digitalWrite ( RECEIVE_PIN,  INPUT_PULLUP ) ;  // pull-up resister on (to prevent garbage)
+  pinMode      ( LED_BUILTIN,  OUTPUT);
+  digitalWrite ( LED_BUILTIN,  LOW);
 
 #ifdef MQTT
 
