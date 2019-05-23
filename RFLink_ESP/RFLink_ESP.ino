@@ -202,8 +202,10 @@ void setup() {
   pinMode      ( RECEIVE_PIN,  INPUT        ) ;
   pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
   digitalWrite ( RECEIVE_PIN,  INPUT_PULLUP ) ;  // pull-up resister on (to prevent garbage)
+#ifdef LED_BUILTIN
   pinMode      ( LED_BUILTIN,  OUTPUT);
   digitalWrite ( LED_BUILTIN,  LOW);
+#endif
 
 #ifdef MQTT
 
