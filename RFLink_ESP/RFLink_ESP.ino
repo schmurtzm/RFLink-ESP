@@ -228,6 +228,7 @@ void setup() {
   RFL_Protocols.Add ( new _RFL_Protocol_KAKU             () ) ;  
   RFL_Protocols.Add ( new _RFL_Protocol_EV1527           () ) ;  
   RFL_Protocols.Add ( new _RFL_Protocol_Paget_Door_Chime () ) ;  
+  RFL_Protocols.Add ( new _RFL_Protocol_DUMMY () ) ;  
   RFL_Protocols.setup () ;
   // ************************************************************************
 
