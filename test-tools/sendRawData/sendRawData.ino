@@ -4,18 +4,18 @@ This sketch parses a raw data format string from serial and transmits through RF
 
 */
 //20;09;DEBUG_Start;Pulses=48;Pulses(uSec)=284,9664,968,284,296,912,296,912,952,292,960,304,952,300,280,928,280,928,276,928,284,928,280,928,936,308,280,928,280,936,268,936,936,308,944,308,944,308,936,316,940,316,936,312,272,944,268,936,268,944,264,7008;
-#define PIN 13
+#define PIN 3
 
 const int numChars = 1024;
 char receivedChars[numChars];   // an array to store the received data
-const int numPulsesMax = 150;
+const int numPulsesMax = 256;
 int pulses[numPulsesMax];
 int numberPulses = 0;
 bool state = 0;
 int nbOfRepeat = 5;
 
 bool recvWithEndMarker() {
-  static byte ndx = 0;
+  static int ndx = 0;
   char rc;
   boolean newData = false;
 
@@ -35,6 +35,7 @@ bool recvWithEndMarker() {
         ndx = 0;
         newData = true;
         Serial.println(receivedChars);
+
       }
     }
   }
@@ -43,9 +44,11 @@ bool recvWithEndMarker() {
 
 int parseData() {
 
-  //strcpy (receivedChars , "20;09;DEBUG_Start;Pulses=48;Pulses(uSec)=284,9664,968,284,296,912,296,912,952,292,960,304,952,300,280,928,280,928,276,928,284,928,280,928,936,308,280,928,280,936,268,936,936,308,944,308,944,308,936,316,940,316,936,312,272,944,268,936,268,944,264,7008;\n");
+  //strcpy (receivedChars , "...\n");
+                          
 
   Serial.print("Number of pulses declared: ");
+  
   char* Cursor;
   Cursor = strstr(receivedChars, ";Pulses=") + 8;
   numberPulses = atoi(Cursor);
