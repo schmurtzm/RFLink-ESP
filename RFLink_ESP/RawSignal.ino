@@ -35,11 +35,16 @@ boolean FetchSignal () {
   //const unsigned long LoopsPerMilli = 345;   // <<< OORSPRONKELIJKE WAARDE VOOR ARDUINO MEGA
   // 2500 was optimaal, maar we hebben de loop sneller gemaakt 3540 naar 3320 usec
   // dus verhogen we met 3540/3320 =>  2670
-  #ifdef ESP32
+
+  /*
+  #ifdef __AVR_ATmega2560__
+    const unsigned long LoopsPerMilli = 345;
+  #elif ESP32
     const unsigned long LoopsPerMilli = 2700;
-  #else
+  #elif ESP8266
     const unsigned long LoopsPerMilli = 800;
   #endif
+*/
   // ************************************************************
   // ************************************************************
 
@@ -53,7 +58,9 @@ boolean FetchSignal () {
   unsigned long PulseLength          ;   // 3320 i.p.v. 3540
   unsigned long numloops             ;   // 3320 i.p.v. 4200
   bool          Start_Level   = LOW  ;   // via #define maakt niet uit
-  unsigned      maxloops      = ( SIGNAL_TIMEOUT * LoopsPerMilli );  // via #define maakt niet uit
+  //unsigned      maxloops      = ( SIGNAL_TIMEOUT * LoopsPerMilli );  // via #define maakt niet uit
+  const unsigned long          maxTime          = ( SIGNAL_TIMEOUT * 1000);
+  unsigned long timeStartLoop;
   // ******************************************************************************************
 
 
@@ -93,6 +100,7 @@ boolean FetchSignal () {
     // Berg dan ook de positieve en negatieve startpuls op
     // ************************************************************
     if ( PulseLength > 5000 ) {
+//Serial.print ("PulseLength: ");
 //Serial.println ( PulseLength ) ;
       RawSignal.Pulses [ RawCodeLength++ ] = LastPulse - FETCH_Pulse_Plus_1 ;
       RawSignal.Pulses [ RawCodeLength++ ] = PulseLength ;
@@ -114,9 +122,11 @@ boolean FetchSignal () {
     //   break als het nivo te lang duurt
     // ************************************************************
     numloops  = 0 ;
+    timeStartLoop = micros();
     LastPulse = micros () ;
     while ( ( digitalRead ( RECEIVE_PIN ) == Start_Level ) ^ Toggle )
-      if ( numloops++ == maxloops ) break ;
+      //if ( numloops++ == maxloops ) break ;
+      if ((micros()-timeStartLoop)> maxTime ) break;
     PulseLength = micros() - LastPulse; 
     
     // ************************************************************
@@ -137,7 +147,8 @@ boolean FetchSignal () {
     // ************************************************************
     // keep track of ststistics
     // ************************************************************
-    if ( numloops < maxloops ) {
+    //if ( numloops < maxloops ) {
+    if ((micros()-timeStartLoop)< maxTime ){
       if ( PulseLength < RawSignal.Min ) RawSignal.Min = PulseLength ;
       if ( PulseLength > RawSignal.Max ) RawSignal.Max = PulseLength ;
       RawSignal.Mean += PulseLength ;
@@ -146,7 +157,9 @@ boolean FetchSignal () {
   // ************************************************************
   // stop als er een lange puls is gevonden of als het buffer vol is
   // ************************************************************
-  } while ( ( RawCodeLength < RAW_BUFFER_SIZE ) && ( numloops < maxloops ) ) ;
+  //} while ( ( RawCodeLength < RAW_BUFFER_SIZE ) && ( numloops < maxloops ) ) ;
+  } while ( ( RawCodeLength < RAW_BUFFER_SIZE ) && ( (micros()-timeStartLoop)< maxTime ) ) ;
+//Serial.print ("RawCodeLength: ");
 //Serial.println ( RawCodeLength ) ;
 
   // ************************************************************
@@ -179,4 +192,3 @@ boolean FetchSignal () {
 }
 
 #endif
-

@@ -82,9 +82,16 @@ class _RFL_Protocol_KAKU : public _RFL_Protocol_BaseClass {
       } 
 
       String On_Off = "OFF" ;
-      if ( ( BitStream & 0x10 ) != 0 ) On_Off = "ON" ; 
-      int           Switch = BitStream & 0x0F ;
-      unsigned long Id     = BitStream >> 5 ;
+      int command = (BitStream >> 4) & 0x03;
+      if (command == 1) { On_Off = "ON" ; }
+      else if (command == 2) { On_Off = "ALLOFF" ; }
+      else if (command == 3) { On_Off = "ALLON" ; }
+
+
+      //if ( ( BitStream & 0x10 ) != 0 ) On_Off = "ON" ; 
+      int           Switch = (BitStream & 0x0F)+1 ;
+      unsigned long Id     = BitStream >> 6 ;
+
 
       /*
       sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
@@ -97,6 +104,10 @@ class _RFL_Protocol_KAKU : public _RFL_Protocol_BaseClass {
       PKSequenceNumber += 1 ;
       return true;
       */
+      sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
+      sprintf ( pbuffer2, "SWITCH=%02X;CMD=ON;", Switch ) ; 
+
+
       return Send_Message ( Name, Id, Switch, On_Off ) ;
       
     }

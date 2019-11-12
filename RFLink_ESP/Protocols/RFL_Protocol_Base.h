@@ -25,6 +25,9 @@ String Randomize_Device_ID ( String Device_ID ) {
 // ***********************************************************************************
 // ***********************************************************************************
 bool Unknown_Device ( String Device ) {
+#ifdef __AVR_ATmega2560__
+  int pos = -1;
+#else
   int pos = RFLink_File.Known_Devices.indexOf ( Device ) ;
   // *******************************************************************
   // If there's a mius sign before the Device name,
@@ -34,17 +37,18 @@ bool Unknown_Device ( String Device ) {
     String New = Randomize_Device_ID ( Device ) ;
     sprintf ( pbuffer, New.c_str() ) ;
   }  
+#endif
 
   if ( pos  < 0 )  {
     if ( Learning_Mode == 0 ) return true ;
-    else {
+    else {/*
       Serial.print   ( "Unknown Device: 12;" ) ;
       Serial.print   ( pbuffer ) ;
       Serial.print   ( "   ") ;
-      Serial.println ( millis() );
+      Serial.println ( millis() );*/
       Unknown_Device_ID = pbuffer ;
       return true ;
-    }
+     }
   }
   return false ;
 }
@@ -67,9 +71,9 @@ Name      ID      Switch   CMD     extra
 */
 // ***********************************************************************************
 bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String On_Off, String Extra="" ) {
-  if ( Unknown_Device ( pbuffer ) ) return false ;
+  if ( Unknown_Device ( pbuffer ) && Learning_Mode == 0) return false ;
 
-  if ( Home_Automation == "MQTT" ) {
+#ifdef MQTT
     String Topic = "ha/from_RFLink/" + Name + "_" ;
     sprintf ( pbuffer, "%05X", Id ) ;
     Topic += String ( pbuffer ) ;
@@ -81,24 +85,30 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
     Serial.println ( "MQTT Send     Topic: " + Topic + "   Payload: " + Payload ) ;
     
     MQTT_Client.publish ( Topic.c_str(), Payload.c_str() );
-  }
+#else
+  
   // **********************************************************  
   // Send an MQTT Message
   //      ha/from_HA/ev1527_005df     S02
-  // **********************************************************  
-  else {
+  // ********************************************************** 
+
     sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
     
     Serial.print   ( PreFix ) ;
     Serial.print   ( pbuffer ) ;
-    sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
+    /*sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
+    Serial.print ( pbuffer2 ) ;*/
+    sprintf ( pbuffer2, "SWITCH=%0X;CMD=", Switch) ;//for some reason On_Off is not printed with the lines above
     Serial.print ( pbuffer2 ) ;
+    Serial.print(On_Off);
+    Serial.print(";"); 
+
     if ( Extra.length() > 0 ) {
       Serial.print ( Extra + ";" ) ;
     }
     Serial.println () ;    
     PKSequenceNumber += 1 ;
-  }
+#endif
   return true ;
 }
 
