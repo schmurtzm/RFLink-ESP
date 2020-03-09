@@ -39,6 +39,7 @@ unsigned long HexString_2_Long ( String HexString ) {
 #include "Protocols/RFL_Protocol_KAKU.h"
 #include "Protocols/RFL_Protocol_Paget_Door_Chime.h"
 #include "Protocols/RFL_Protocol_DUMMY.h"
+#include "Protocols/RFL_Protocol_Oregon.h"
 
 #ifdef __AVR_ATmega2560__
 #define MAX_PROTOCOL_COUNT 8

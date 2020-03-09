@@ -171,7 +171,9 @@ class _RFL_Protocol_Start : public _RFL_Protocol_BaseClass {
       #define OVERSIZED_LIMIT         291  // longest packet is handled by plugin 48
       #define FA500RM3_PulseLength    26
       #define FA500RM1_PulseLength    58
-      
+      #define RAWSIGNAL_SAMPLE_RATE   30   // Sample width / resolution in uSec for raw RF pulses.
+
+      #define PULSE1600               1600 // /RAWSIGNAL_SAMPLE_RATE
       #define PULSE2000               2000
       #define PULSE4000               4000
       #define PULSE4200               4200
@@ -221,6 +223,35 @@ class _RFL_Protocol_Start : public _RFL_Protocol_BaseClass {
          }
       }
 
+
+    if (RawSignal.Number == RAW_BUFFER_SIZE - 1)
+    {
+      for (j = 50; j < 104; j++)
+      { // Only check the total RF packet length we are looking for
+        //if (RawSignal.Pulses[j]*RawSignal.Multiply > 2500) {  // input is going to fast skip to where new part is going to start
+        if (RawSignal.Pulses[j] > PULSE1600)
+        { // input is going to fast skip to where new part is going to start
+          if (j + 52 > RAW_BUFFER_SIZE - 1)
+            break; // check for overflow, cant be the packet we look for
+          byte x = 0;
+          if ((RawSignal.Pulses[j + 52] > PULSE1600) && (RawSignal.Pulses[j + 52 + 52] > PULSE1600) && (RawSignal.Pulses[j + 52 + 52 + 52] > PULSE1600))
+            x = 2;
+          if ((RawSignal.Pulses[j + 50] > PULSE1600) && (RawSignal.Pulses[j + 50 + 50] > PULSE1600) && (RawSignal.Pulses[j + 50 + 50 + 50] > PULSE1600))
+            x = 1;
+          if (x != 0)
+          {
+            for (i = 0; i < 52; i++)
+            {
+              RawSignal.Pulses[1 + i] = RawSignal.Pulses[j + 1 + i]; // reorder pulse array
+            }
+            RawSignal.Number = 52;    // New packet length
+            RawSignal.Pulses[0] = 63; // signal the plugin number that should process this packet
+            //Serial.println("P002");
+            return false; // Conversion done, stop plugin 1 and continue with regular plugins
+          }
+        }
+      }
+    }
       // ***************************************************
       // END of protocol Start, if the incoming packet is not oversized and resume normal processing of plugins
       // ***************************************************
