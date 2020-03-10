@@ -78,13 +78,18 @@ bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String 
     sprintf ( pbuffer, "%05X", Id ) ;
     Topic += String ( pbuffer ) ;
 
-    String Payload = "S" ;
+	// let's create a simple payload in json format
+
+    String Payload = "{\"SWITCH\":\"" ;
     sprintf ( pbuffer, "%0X", Switch ) ;
     Payload += String ( pbuffer ) ;
-    
+	Payload += "\",\"CMD\":\"";
+	Payload += On_Off;
+    Payload += "\"}";
     Serial.println ( "MQTT Send     Topic: " + Topic + "   Payload: " + Payload ) ;
     
     MQTT_Client.publish ( Topic.c_str(), Payload.c_str() );
+
 #else
   
   // **********************************************************  

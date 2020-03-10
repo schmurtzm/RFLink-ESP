@@ -9,22 +9,22 @@
 
 
 #ifdef __AVR_ATmega2560__
-  #define RS232 
+#define RS232
 #else
-  //#define MQTT
-  #define RS232
+#define MQTT
+#define RS232
 #endif
 
 // ****************************************************************************
 // used in Raw signal
 //
-// original: 20=8 bits. Minimal number of bits*2 that need to have been received 
+// original: 20=8 bits. Minimal number of bits*2 that need to have been received
 //    before we spend CPU time on decoding the signal.
 //
 // MAX might be a little to low ??
 // ****************************************************************************
 #define MIN_RAW_PULSES         26   //20  // =8 bits. Minimal number of bits*2 that need to have been received before we spend CPU time on decoding the signal.
-#define MAX_RAW_PULSES        150   
+#define MAX_RAW_PULSES        150
 // ****************************************************************************
 #define MIN_PULSE_LENGTH      25   // Pulses shorter than this value in uSec. will be seen as garbage and not taken as actual pulses.
 #define SIGNAL_TIMEOUT         7   // Timeout, after this time in mSec. the RF signal will be considered to have stopped.
@@ -53,7 +53,7 @@ struct RawSignalStruct {                 // Raw signal variabelen places in a st
   long          Mean   ;
   unsigned long Time   ;                 // Timestamp indicating when the signal was received (millis())
   int Pulses [ RAW_BUFFER_SIZE + 2 ] ;   // Table with the measured pulses in microseconds divided by RawSignal.Multiply. (halves RAM usage)
-                                         // First pulse is located in element 1. Element 0 is used for special purposes, like signalling the use of a specific plugin
+  // First pulse is located in element 1. Element 0 is used for special purposes, like signalling the use of a specific plugin
 } RawSignal = {0, 0, 0, false, 0L};
 
 //} RawSignal= {0,0,0,0,0L };
@@ -61,31 +61,31 @@ struct RawSignalStruct {                 // Raw signal variabelen places in a st
 
 unsigned long Last_BitStream      = 0L    ;  // holds the bitstream value for some plugins to identify RF repeats
 bool          Serial_Command      = false ;
-int           SerialInByteCounter = 0     ;  // number of bytes counter 
+int           SerialInByteCounter = 0     ;  // number of bytes counter
 byte          SerialInByte                ;  // incoming character value
 String        Unknown_Device_ID   = ""    ;
 
 // ***********************************************************************************
 // Hardware pins
 // ***********************************************************************************
-  #ifdef __AVR_ATmega2560__
-    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.    
-  #elif ESP32
-    #define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
-  #elif ESP8266
-    #define TRANSMIT_PIN    2    // Data to the 433Mhz transmitter on this pin
-    #define RECEIVE_PIN    4    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
-  #endif
+#ifdef __AVR_ATmega2560__
+#define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
+#define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.    
+#elif ESP32
+#define TRANSMIT_PIN    5    // Data to the 433Mhz transmitter on this pin
+#define RECEIVE_PIN    19    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
+#elif ESP8266
+#define TRANSMIT_PIN    2    // Data to the 433Mhz transmitter on this pin
+#define RECEIVE_PIN    4    // On this input, the 433Mhz-RF signal is received. LOW when no signal.
+#endif
 
 
 // ***********************************************************************************
 // File with the device registrations
 // ***********************************************************************************
 #ifndef __AVR_ATmega2560__
-  #include "RFLink_File.h"
- _RFLink_File  RFLink_File ; // ( "/RFLink.txt" ) ;
+#include "RFLink_File.h"
+_RFLink_File  RFLink_File ; // ( "/RFLink.txt" ) ;
 
 
 
@@ -95,26 +95,45 @@ String        Unknown_Device_ID   = ""    ;
 // ***********************************************************************************
 /*
 
-unsigned long Send_Time_ms   = 10000 ;
+  unsigned long Send_Time_ms   = 10000 ;
 
-//#define OneWire_Pin  2   // PIN for OneWire, if necessary must be defined before library Sensor_Receiver_2
+  //#define OneWire_Pin  2   // PIN for OneWire, if necessary must be defined before library Sensor_Receiver_2
 
-//#include "user_interface.h"      //system_get_sdk_version()
-//#define WIFI_TX_POWER  82
-//#define WIFI_MODE_BGN  PHY_MODE_11G
+  //#include "user_interface.h"      //system_get_sdk_version()
+  //#define WIFI_TX_POWER  82
+  //#define WIFI_MODE_BGN  PHY_MODE_11G
 
-//#define CAMPER
-#include "Sensor_Receiver_2.h"
-// */
+  //#define CAMPER
+  #include "Sensor_Receiver_2.h"
+  // */
 
 
 String MQTT_ID = "RFLink-ESP" ;
 String Topic   = "ha/from_HA/" ;
 
 #ifdef ESP32
- #include <WiFi.h>
+#include <WiFi.h>
 #elif ESP8266
- #include <ESP8266WiFi.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>     // Replace with WebServer.h for ESP32
+#include <AutoConnect.h>
+
+//for OTA with AutoConnect
+#include <ESP8266HTTPUpdateServer.h>
+#include <WiFiClient.h>
+//for OTA with AutoConnect
+ESP8266WebServer Server;          // Replace with WebServer for ESP32
+ESP8266HTTPUpdateServer httpUpdate;
+AutoConnect      Portal(Server);
+AutoConnectAux update("/update", "UPDATE"); // Step #5, #6, #7
+AutoConnectAux hello;
+//AutoConnectConfig  Config("", "passpass");
+//Config.autoReconnect = true;
+// for OTA from IDE (not linked to autoconnect)
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+
 #endif
 
 #include "PubSubClient.h"
@@ -125,9 +144,19 @@ PubSubClient MQTT_Client ( My_WifiClient ) ;
 String Received_MQTT_Topic   ;
 String Received_MQTT_Payload ;
 
+// -*-*-*-*-*-*-*-- for AutoConnect --*-*-*-*-*-*-*-
+void rootPage() {
+  char content[] = "Hello, world";
+  Server.send(200, "text/plain", content);
+}
 
-
-
+static const char HELLO_PAGE[] PROGMEM = R"(
+{ "title": "Hello world", "uri": "/", "menu": true, "element": [
+    { "name": "caption", "type": "ACText", "value": "<h2>Hello, world</h2>",  "style": "text-align:center;color:#2f4f4f;padding:10px;" },
+    { "name": "content", "type": "ACText", "value": "In this page, place the custom web page handled by the sketch application." } ]
+}
+)";
+  // -*-*-*-*-*-*-- END - for AutoConnect --*-*-*-*-*-*-
 
 
 // ***********************************************************************************
@@ -140,7 +169,9 @@ void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
     Payload += (char) payload[i]  ;
   }
   Received_MQTT_Payload = Payload ;
+
   
+
   // ************************************************
   // from:   ha/from_HA/ev1527_005df     S02
   // to:     10;EV1527;005DF;2;ON;
@@ -151,16 +182,16 @@ void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
   Topic.toUpperCase () ;
   Topic = Topic.substring ( 11 ) ;     //  EV1527_005DF
   int x1 = Topic.indexOf ( "_" ) ;
-  Line += Topic.substring ( 0, x1 ) + ";" + Topic.substring ( x1+1 ) +";" ;
+  Line += Topic.substring ( 0, x1 ) + ";" + Topic.substring ( x1 + 1 ) + ";" ;
   Payload = Payload.substring ( 1 ) ;
   int Switch = Payload.toInt () ;
   Line += String ( Switch ) + ";ON;" ;
 
   //if ( Learning_Mode > 0 ) {
-    Serial.print   ( "MQTT Received Topic: " ) ;
-    Serial.print   ( topic ) ;
-    Serial.print   ( "  Payload: " + Payload ) ;
-    Serial.println ( "    Converted: " + Line ) ;
+  Serial.print   ( "MQTT Received Topic: " ) ;
+  Serial.print   ( topic ) ;
+  Serial.print   ( "  Payload: " + Payload ) ;
+  Serial.println ( "    Converted: " + Line ) ;
   //}
 
   Line.toCharArray ( InputBuffer_Serial, sizeof ( InputBuffer_Serial ) ) ;
@@ -174,16 +205,16 @@ void MQTT_Receive_Callback ( char* topic, byte* payload, unsigned int length ) {
 void MQTT_Reconnect() {
   // Loop until we're reconnected
   while ( !MQTT_Client.connected() ) {
-    //Serial.print ( "Attempting MQTT connection ... " ) ;
-    //Serial.print ( Broker_IP ) ;
+    Serial.print ( "Attempting MQTT connection ... " ) ;
+    Serial.println ( Broker_IP ) ;
 
-    if ( MQTT_Client.connect ( MQTT_ID.c_str() ) ) {  //, MQTT_User, MQTT_Pwd,    Subscription_Out, 1, 1, LWT )) {
-    //if ( MQTT_Client.connect ( MQTT_ID, MQTT_User, MQTT_Pwd ) ) {   //,    Subscription_Out, 1, 1, LWT )) {
-      //Serial.println ( " connected" ) ;
-      
+    if ( MQTT_Client.connect ( MQTT_ID.c_str(), MQTT_User, MQTT_Pwd)){   //Subscription_Out, 1, 1, LWT ) ) {  // )) {
+      //if ( MQTT_Client.connect ( MQTT_ID, MQTT_User, MQTT_Pwd ) ) {   //,    Subscription_Out, 1, 1, LWT )) {
+      Serial.println ( " connected" ) ;
+
       // ... and resubscribe
       MQTT_Client.subscribe ( ( Topic + "#").c_str() ) ;
-    } 
+    }
     else {
       Serial.print ( "failed, rc=" ) ;
       Serial.print ( MQTT_Client.state() ) ;
@@ -195,12 +226,32 @@ void MQTT_Reconnect() {
 }
 #endif
 
-#include "RFL_Protocols.h" 
+#include "RFL_Protocols.h"
 
 // ***********************************************************************************
 // ***********************************************************************************
 void setup() {
-  Serial.begin ( 57600 ) ;  
+
+  // -*-*-*-*-*-*-*-- for AutoConnect --*-*-*-*-*-*-*-
+  delay(1000);
+
+
+  Server.on("/", rootPage);
+
+  httpUpdate.setup(&Server, "test", "test"); // Step #9.a
+  hello.load(HELLO_PAGE);                                // Step #9.b
+  Portal.join({ hello, update });      
+  
+  if (Portal.begin()) {
+    if (MDNS.begin("RFLink-ESP")) {
+      MDNS.addService("http", "tcp", 80);
+    }
+     Serial.println("WiFi connected: " + WiFi.localIP().toString());
+  }
+  
+  // -*-*-*-*-*-*-- END - for AutoConnect --*-*-*-*-*-*-
+
+  Serial.begin ( 57600 ) ;
 
   pinMode      ( RECEIVE_PIN,  INPUT        ) ;
   pinMode      ( TRANSMIT_PIN, OUTPUT       ) ;
@@ -213,14 +264,61 @@ void setup() {
 #ifdef MQTT
 
 
+
+  // ***************************************************************************
+  // Configure OTA
+  // ***************************************************************************
+
+  Serial.println("Arduino OTA activated.");
+
+  // Port defaults to 8266
+  ArduinoOTA.setPort(8266);
+
+  // Hostname defaults to esp8266-[ChipID]
+  ArduinoOTA.setHostname("RFLink-ESP");
+
+  // No authentication by default
+  // ArduinoOTA.setPassword("admin");
+
+  // Password can be set with it's md5 value as well
+  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
+  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+
+  ArduinoOTA.onStart([]() {
+    Serial.end();
+    Serial.begin(57600, SERIAL_8N1, SERIAL_TX_ONLY, 1);  // on disable le RX de l'ESP pour avoir un OTA plus stable (bug OTA arduino :  https://github.com/esp8266/Arduino/issues/2576 ou https://github.com/esp8266/Arduino/issues/3881)
+    Serial.println("Arduino OTA: Start updating");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("Arduino OTA: End");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Arduino OTA Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Arduino OTA Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Arduino OTA: Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Arduino OTA: Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Arduino OTA: Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Arduino OTA: Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("Arduino OTA: End Failed");
+  });
+
+  ArduinoOTA.begin();
+
+  // ***************************************************************************
+  // END - Configure OTA
+  // ***************************************************************************
+
+
   RFLink_File.Begin () ;
 
-
-  WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
-  while ( WiFi.status () != WL_CONNECTED ) {
-    delay ( 500 ) ;
-    Serial.print ( "." ) ;
-  }
+//
+//  WiFi.begin ( Wifi_Name, Wifi_PWD ) ;
+//  while ( WiFi.status () != WL_CONNECTED ) {
+//    delay ( 500 ) ;
+//    Serial.print ( "." ) ;
+//  }
 
   MQTT_Client.setServer ( Broker_IP, Broker_Port ) ;
   MQTT_Client.setCallback ( MQTT_Receive_Callback ) ;
@@ -228,11 +326,11 @@ void setup() {
 #endif
 
   // *********   PROTOCOL CLASSES, available and in this order   ************
-  RFL_Protocols.Add ( new _RFL_Protocol_KAKU             () ) ;  
-  RFL_Protocols.Add ( new _RFL_Protocol_EV1527           () ) ;  
-  RFL_Protocols.Add ( new _RFL_Protocol_Paget_Door_Chime () ) ;  
-  RFL_Protocols.Add ( new _RFL_Protocol_DUMMY () ) ; 
-  RFL_Protocols.Add ( new _RFL_Protocol_Oregon           () ) ;   
+  RFL_Protocols.Add ( new _RFL_Protocol_KAKU             () ) ;
+  RFL_Protocols.Add ( new _RFL_Protocol_EV1527           () ) ;
+  RFL_Protocols.Add ( new _RFL_Protocol_Paget_Door_Chime () ) ;
+  RFL_Protocols.Add ( new _RFL_Protocol_DUMMY () ) ;
+  RFL_Protocols.Add ( new _RFL_Protocol_Oregon           () ) ;
   RFL_Protocols.setup () ;
   // ************************************************************************
 
@@ -240,9 +338,8 @@ void setup() {
   delay ( 200 ) ;
 
 
-  sprintf ( pbuffer, "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", 
-                 PKSequenceNumber++, Version, Revision );
-  Serial.print ( pbuffer ) ; 
+  sprintf ( pbuffer, "20;%02X;Nodo RadioFrequencyLink - MiRa V%s - R%02x\r\n", PKSequenceNumber++, Version, Revision );
+  Serial.print ( pbuffer ) ;
 
   RawSignal.Time = millis() ;
 }
@@ -258,31 +355,36 @@ void loop () {
   }
   MQTT_Client.loop ();
 #endif
-  
+
   if ( FetchSignal () ) {
     RFL_Protocols.Decode ();
   }
   Collect_Serial () ;
- 
-/*
-  if ( FetchSignal () ) {
-    //RFL_Protocols.Decode ();
-    int Time ;
-    sprintf ( pbuffer, "20;%02X;", PKSequenceNumber++ ) ;
-    Serial.print ( pbuffer ) ;
-    Serial.print ( F( "DEBUG_Start;Pulses=" ) ) ;
-    Serial.print ( RawSignal.Number - 3 ) ;
-        Serial.print ( F ( ";Pulses(uSec)=" )) ;
-        for ( int x=0; x<RawSignal.Number+1; x++ ) {
-          Time = RawSignal.Pulses[x] ;
-            //Time = 30 * ( Time / 30 ) ;
-          Serial.print ( Time ) ; 
-          if (x < RawSignal.Number) Serial.print ( "," );       
-        }
-        Serial.println ( ";" ) ;
-  }
-*/ 
 
-  
+  // -*-*-*-*-*-*-- for AutoConnect --*-*-*-*-*-*-
+   MDNS.update();  
+   Portal.handleClient();
+  // -*-*-*-*-*-*-- END - for AutoConnect --*-*-*-*-*-*-
+    ArduinoOTA.handle();
+  /*
+    if ( FetchSignal () ) {
+      //RFL_Protocols.Decode ();
+      int Time ;
+      sprintf ( pbuffer, "20;%02X;", PKSequenceNumber++ ) ;
+      Serial.print ( pbuffer ) ;
+      Serial.print ( F( "DEBUG_Start;Pulses=" ) ) ;
+      Serial.print ( RawSignal.Number - 3 ) ;
+          Serial.print ( F ( ";Pulses(uSec)=" )) ;
+          for ( int x=0; x<RawSignal.Number+1; x++ ) {
+            Time = RawSignal.Pulses[x] ;
+              //Time = 30 * ( Time / 30 ) ;
+            Serial.print ( Time ) ;
+            if (x < RawSignal.Number) Serial.print ( "," );
+          }
+          Serial.println ( ";" ) ;
+    }
+  */
+
+
 
 }
