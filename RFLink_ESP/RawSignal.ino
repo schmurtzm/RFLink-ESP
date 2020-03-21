@@ -77,7 +77,7 @@ boolean FetchSignal () {
   // wait for long low level (Start_Level) = start of new sequence
   // ************************************************************
   bool Started = false ;
-  unsigned long Start_Time = 500 + millis() ;  // 100 .. 500 msec, maakt niet zo veel uit  // 100 .. 500 msec, does not really matter
+  unsigned long Start_Time = 100 + millis() ;  // 100 .. 500 msec, maakt niet zo veel uit  // 100 .. 500 msec, does not really matter (may be smaller give better ping)
   while ( !Started ) {
     // ************************************************************
     // als het nivo laag is, wacht tot het einde van dit laag nivo

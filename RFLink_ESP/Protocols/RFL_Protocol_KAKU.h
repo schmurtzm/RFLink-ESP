@@ -117,7 +117,8 @@ class _RFL_Protocol_KAKU : public _RFL_Protocol_BaseClass {
     bool Home_Command ( String Device, unsigned long ID, int Switch, String On ) {
       //if ( Device !=  Name.toUpperCase () ) return false ;
       if ( Device.compareTo ( NAME ) ) return false ;
-
+      ID = ID * 2;  // modification by Schmurtz : just noticed that the send ID was divided by 2 (don't know why...)
+	  Switch--;		// modification by Schmurtz : just noticed that the send Switch was anormally incremented (don't know why...)
       unsigned long Data  = ( ID << 5 ) | Switch ;
       if ( On == "ON" ) Data = Data | 0x10 ;
       int           NData = 32 ;

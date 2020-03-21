@@ -247,8 +247,8 @@ void Process_Serial () {
  #ifdef __AVR_ATmega2560__
             Serial.println("MQTT not supported on Arduino");
  #else
-            Received_MQTT_Topic.replace ( "from_HA", "from_RFLink" ) ;
-            MQTT_Client.publish ( Received_MQTT_Topic.c_str(), Received_MQTT_Payload.c_str() );
+            // Received_MQTT_Topic.replace ( "from_HA", "from_RFLink" ) ;
+            // MQTT_Client.publish ( Received_MQTT_Topic.c_str(), Received_MQTT_Payload.c_str() );
  #endif
 #else
           //else if ( Home_Automation == "RS232" ) {

@@ -2,57 +2,62 @@
 #ifndef RFL_Protocol_Base_h
 #define RFL_Protocol_Base_h
 
-
 // ***********************************************************************************
 // ***********************************************************************************
-String Randomize_Device_ID ( String Device_ID ) {
-  if ( Device_ID.length() == 0 ) return "" ;
-  int x1 = Device_ID.indexOf ( ";" ) ;
-  String New = Device_ID.substring ( x1+4 ) ;
-  New = New.substring ( 0, New.length()-1 ) ;
+String Randomize_Device_ID(String Device_ID)
+{
+  if (Device_ID.length() == 0)
+    return "";
+  int x1 = Device_ID.indexOf(";");
+  String New = Device_ID.substring(x1 + 4);
+  New = New.substring(0, New.length() - 1);
 
-  unsigned long x = HexString_2_Long ( New ) ;
-  x = x * 48271 % 2147483647 ;
+  unsigned long x = HexString_2_Long(New);
+  x = x * 48271 % 2147483647;
   // ********************************************************************
   // Pasted from <http://www.cplusplus.com/reference/random/minstd_rand/>
   // ********************************************************************
 
-  String Result = Device_ID.substring ( 0, x1+1 ) + "ID=" + String ( x, HEX ) + ";" ;
-  Result.toUpperCase () ;
-  return Result ;            
+  String Result = Device_ID.substring(0, x1 + 1) + "ID=" + String(x, HEX) + ";";
+  Result.toUpperCase();
+  return Result;
 }
 
 // ***********************************************************************************
 // ***********************************************************************************
-bool Unknown_Device ( String Device ) {
+bool Unknown_Device(String Device)
+{
 #ifdef __AVR_ATmega2560__
   int pos = -1;
 #else
-  int pos = RFLink_File.Known_Devices.indexOf ( Device ) ;
+  int pos = RFLink_File.Known_Devices.indexOf(Device);
   // *******************************************************************
   // If there's a mius sign before the Device name,
   // the received RF ID should be changed by the pseudo random generator
   // *******************************************************************
-  if ( ( pos > 0 ) && ( RFLink_File.Known_Devices.charAt(pos-1) == '-' ) ) {
-    String New = Randomize_Device_ID ( Device ) ;
-    sprintf ( pbuffer, New.c_str() ) ;
-  }  
+  if ((pos > 0) && (RFLink_File.Known_Devices.charAt(pos - 1) == '-'))
+  {
+    String New = Randomize_Device_ID(Device);
+    sprintf(pbuffer, New.c_str());
+  }
 #endif
 
-  if ( pos  < 0 )  {
-    if ( Learning_Mode == 0 ) return true ;
-    else {/*
+  if (pos < 0)
+  {
+    if (Learning_Mode == 0)
+      return true;
+    else
+    { /*
       Serial.print   ( "Unknown Device: 12;" ) ;
       Serial.print   ( pbuffer ) ;
       Serial.print   ( "   ") ;
       Serial.println ( millis() );*/
-      Unknown_Device_ID = pbuffer ;
-      return true ;
-     }
+      Unknown_Device_ID = pbuffer;
+      return true;
+    }
   }
-  return false ;
+  return false;
 }
-
 
 // ***********************************************************************************
 /*
@@ -70,102 +75,145 @@ bool Unknown_Device ( String Device ) {
 Name      ID      Switch   CMD     extra
 */
 // ***********************************************************************************
-bool Send_Message ( String Name, unsigned long Id, unsigned long Switch, String On_Off, String Extra="" ) {
-  if ( Unknown_Device ( pbuffer ) && Learning_Mode == 0) return false ;
+bool Send_Message(String Name, unsigned long Id, unsigned long Switch, String On_Off, String Extra = "")
+{
+  if (Unknown_Device(pbuffer) && Learning_Mode == 0)
+    return false;
 
 #ifdef MQTT
-    String Topic = "ha/from_RFLink/" + Name + "_" ;
-    sprintf ( pbuffer, "%05X", Id ) ;
-    Topic += String ( pbuffer ) ;
+  //String Topic = "ha/from_RFLink/" + Name + "/" ;
+  String Topic = Mqtt_Topic + "/received/" + Name + "/"; // receive = RFtoMQTT
+  sprintf(pbuffer, "%05X", Id);
+  Topic += String(pbuffer);
 
-	// let's create a simple payload in json format
-
-    String Payload = "{\"SWITCH\":\"" ;
+  // let's create a simple payload in json format
+  // .... old manual way...
+  /*  -------------------------------------
+	String Payload = "{\"SWITCH\":\"" ;
     sprintf ( pbuffer, "%0X", Switch ) ;
     Payload += String ( pbuffer ) ;
 	Payload += "\",\"CMD\":\"";
 	Payload += On_Off;
-    Payload += "\"}";
-    Serial.println ( "MQTT Send     Topic: " + Topic + "   Payload: " + Payload ) ;
-    
-    MQTT_Client.publish ( Topic.c_str(), Payload.c_str() );
+    Payload += "\"}"; 
+	-------------------------------------*/
 
-#else
-  
-  // **********************************************************  
+  // .... Better with ArduinoJson library ...
+  String Payload;
+  StaticJsonDocument<200> doc;
+  doc["SWITCH"] = Switch;
+  doc["CMD"] = On_Off;
+  serializeJson(doc, Payload);
+
+  time_t now = time(nullptr);
+  Serial.print(ctime(&now));
+
+  Serial.println("MQTT Send     Topic: " + Topic + "   Payload: " + Payload);
+  MQTT_Client.publish(Topic.c_str(), Payload.c_str());
+
+  ///// ==== We display on serial port too  ====
+  //#else
+
+  // **********************************************************
   // Send an MQTT Message
   //      ha/from_HA/ev1527_005df     S02
-  // ********************************************************** 
+  // **********************************************************
 
-    sprintf ( pbuffer, "%s;ID=%05X;", Name.c_str(), Id ) ; 
-    
-    Serial.print   ( PreFix ) ;
+  sprintf(pbuffer, "%s;ID=%05X;", Name.c_str(), Id);
+
+  String RFlink_data;
+
+  RFlink_data = PreFix;
+  RFlink_data += pbuffer;
+  sprintf(pbuffer2, "SWITCH=%0X;CMD=", Switch); //for some reason On_Off is not printed with the lines above
+  RFlink_data += pbuffer2;
+  RFlink_data += On_Off;
+  RFlink_data += ";";
+  Serial.println(RFlink_data);
+
+  /*   Serial.print   ( PreFix ) ;
     Serial.print   ( pbuffer ) ;
-    /*sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
-    Serial.print ( pbuffer2 ) ;*/
+    //sprintf ( pbuffer2, "SWITCH=%0X;CMD=%s;", Switch, On_Off.c_str() ) ; 
+    //Serial.print ( pbuffer2 ) ;
     sprintf ( pbuffer2, "SWITCH=%0X;CMD=", Switch) ;//for some reason On_Off is not printed with the lines above
     Serial.print ( pbuffer2 ) ;
     Serial.print(On_Off);
-    Serial.print(";"); 
+    Serial.print(";"); */
 
-    if ( Extra.length() > 0 ) {
-      Serial.print ( Extra + ";" ) ;
-    }
-    Serial.println () ;    
-    PKSequenceNumber += 1 ;
+  History_EventList[History_CurrentEvent].History_date = ctime(&now);
+  History_EventList[History_CurrentEvent].History_isreceived = true;
+  History_EventList[History_CurrentEvent].History_message = RFlink_data;
+  History_CurrentEvent++;
+  if (History_CurrentEvent >= History_MaxEvents)
+  {
+    History_CurrentEvent = 0;
+    History_MaxReached = true;
+  }
+
+  if (Extra.length() > 0)
+  {
+    Serial.print(Extra + ";");
+  }
+  Serial.println();
+  PKSequenceNumber += 1;
 #endif
-  return true ;
+  return true;
 }
 
 // ***********************************************************************************
 // ***********************************************************************************
-class _RFL_Protocol_BaseClass {
-  public:
-    String Name = "Unknown" ;
-    String NAME ;
-    int    ID   = 0         ;
+class _RFL_Protocol_BaseClass
+{
+public:
+  String Name = "Unknown";
+  String NAME;
+  int ID = 0;
 
-    // **********************************************************************************************
-    // By defining the method virtual,
-    // The method in the derived class (if available) will take over the functionality
-    // If no method with the same name is in the derived class, this virtual method will be effective
-    //
-    // if derived class overrides this method, it should call theis base:
-    //   _RFL_Protocol_BaseClass::setup() ;
-    // **********************************************************************************************
-    virtual void setup () {
-      if ( Learning_Mode > 0 ) {
-        Serial.print   ( "Active Protocol " + Name ) ;
-        Serial.print   ( "    ID = " ) ;
-        Serial.println ( ID ) ;
-      }
+  // **********************************************************************************************
+  // By defining the method virtual,
+  // The method in the derived class (if available) will take over the functionality
+  // If no method with the same name is in the derived class, this virtual method will be effective
+  //
+  // if derived class overrides this method, it should call theis base:
+  //   _RFL_Protocol_BaseClass::setup() ;
+  // **********************************************************************************************
+  virtual void setup()
+  {
+    if (Learning_Mode > 0)
+    {
+      Serial.print("Active Protocol " + Name);
+      Serial.print("    ID = ");
+      Serial.println(ID);
     }
+  }
 
-    virtual void loop () {
-      // ************************************************************
-      // Not allowed to do here a print statement
-      // because it's possible that the sensor doesn't need a loop !!
-      // ************************************************************
-    }
-    
-    // ***********************************************************************
-    // ***********************************************************************
-    virtual bool RF_Decode () {
-      Serial.print   ( "DECODE of _RFL_Protocol_Class is Missing " + Name ) ;
-	    return false ;
-    }
+  virtual void loop()
+  {
+    // ************************************************************
+    // Not allowed to do here a print statement
+    // because it's possible that the sensor doesn't need a loop !!
+    // ************************************************************
+  }
 
-    // ***********************************************************************
-    // ***********************************************************************
-    virtual bool Home_Command ( String Device, unsigned long ID, int Switch, String On ) {
-      return false ;
-    } 
+  // ***********************************************************************
+  // ***********************************************************************
+  virtual bool RF_Decode()
+  {
+    Serial.print("DECODE of _RFL_Protocol_Class is Missing " + Name);
+    return false;
+  }
 
-    // ***********************************************************************
-    // ***********************************************************************
-    virtual void Print_Help () {
-      Serial.println ( "Help information is missing for this library " + Name ) ;
-    }
+  // ***********************************************************************
+  // ***********************************************************************
+  virtual bool Home_Command(String Device, unsigned long ID, int Switch, String On)
+  {
+    return false;
+  }
 
+  // ***********************************************************************
+  // ***********************************************************************
+  virtual void Print_Help()
+  {
+    Serial.println("Help information is missing for this library " + Name);
+  }
 };
 #endif
