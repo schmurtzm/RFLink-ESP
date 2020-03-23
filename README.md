@@ -68,9 +68,9 @@ TRANSMIT_PIN = GPIO 5 = D1 on wemos & Lolin
 - The first time that RFlink-ESP boot, it start an AP called RFlink-ESP-xxxxxx , the default password is 12345678
 - Then there will be [a captive portal](https://github.com/Hieromon/AutoConnect/blob/master/docs/images/ov.gif) where you will be able to specify your SSID and password. Stay on this configuration page few instatn more to get the current IP of your device.
 - Naviguate to the new IP, the home page look like this :
-![Image](https://raw.githubusercontent.com/schmurtzm/RFLink-ESP/master/docs/images/Screenshots/RFlink-ESP_Homepage.png)
+![Image](https://raw.githubusercontent.com/schmurtzm/RFLink-ESP/master/docs/_images/Screenshots/RFlink-ESP_Homepage.png)
 - Reset the module one time then go to configuration an specify mqtt server, put your settings and reset again the device. Exemple of configuration :
-![Image](https://raw.githubusercontent.com/schmurtzm/RFLink-ESP/master/docs/images/Screenshots/RFlink-ESP_Configuration_MQTT.png)
+![Image](https://raw.githubusercontent.com/schmurtzm/RFLink-ESP/master/docs/_images/Screenshots/RFlink-ESP_Configuration_MQTT.png)
 
 
 ## How to use it ?
