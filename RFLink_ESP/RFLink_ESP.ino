@@ -10,7 +10,7 @@
 //   - added : New Template for MQTT to RF message (the payload is in JSON format and the "CMD" is included in payload)
 //   - added : Compatibility with Sonoff RF Bridge with direct Hack (in arduino IDE -> choose "ESP8285", 160Mhz, flash size 1MB + FS 64KB )
 //             Due too low memory of the Sonoff RF Bridge, please use a "basic OTA" Sketch and then make an OTA from IDE
-               Direct Hack informations : https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack
+//             Direct Hack informations : https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack
 //   - Correction : some modifications for sending KAKU protocol in "RFL_Protocol_KAKU.h"
 //
 // ****************************************************************************
@@ -238,7 +238,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
       {
         "name": "caption",
         "type": "ACText",
-        "value": "Publishing the WiFi signal strength to MQTT channel. RSSI value of ESP8266 to the channel created on ThingSpeak",
+        "value": "MQTT Broker settings",
         "style": "font-family:serif;color:#4682b4;"
       },
       {
@@ -305,7 +305,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
       {
         "name": "caption2",
         "type": "ACText",
-        "value": "Blablalbal",
+        "value": "Other settings",
         "style": "font-family:serif;color:#4682b4;"
       },
       {
@@ -551,7 +551,7 @@ Serial.println(History_Count);
     "<h1>RFLink-ESP   " AUTOCONNECT_LINK(COG_32) "</h1><Br>";
     //"<iframe width=\"450\" height=\"260\" style=\"transform:scale(0.79);-o-transform:scale(0.79);-webkit-transform:scale(0.79);-moz-transform:scale(0.79);-ms-transform:scale(0.79);transform-origin:0 0;-o-transform-origin:0 0;-webkit-transform-origin:0 0;-moz-transform-origin:0 0;-ms-transform-origin:0 0;border: 1px solid #cccccc;\" src=\"https://thingspeak.com/channels/454951/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&type=line\"></iframe>"
     //"<p style=\"text-align:center\">"  "</p></h1>";
-  content +=         "Last refresh :"; 
+  content +=         "Last refresh : "; 
   content +=          ctime(&now); 
   content +=         "<Br>";
   //content +=         "<form action='/' method='POST'><button type='button submit' name='BtnRefreshRain' value='1'>Refresh</button></form><Br>";
@@ -716,7 +716,8 @@ void setup() {
      Serial.println("AP name set to " + config.apid);
 //    }
 
-    // We configure Autoconnect...
+    // config.psk = "RFlinkPwd1";   // if not defined, default Wifi AP is 12345678, you can change it here
+
     if (Adv_HostName.length()) {
       config.hostName = Adv_HostName;
       Serial.println("hostname set to " + config.hostName);
