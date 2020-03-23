@@ -97,7 +97,7 @@ Exemples :<Br>
 - "MQTT enabled" checkbox has no effect at that time (v2.2)
 - GMT / DST time settings are probably bugged
 - ESP32 compilation is probably broken at that time, needs some easy [modifications on autoconnect](https://hieromon.github.io/AutoConnect/basicusage.html)
-
+- some regex are bad in mqtt settings. So sometimes it is displayed in red but your settings will be saved anyway.
 
 ----------------------------------------------------------------------------------------------
 
