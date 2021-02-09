@@ -513,8 +513,8 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux["parameters"].as<AutoConnectText>();
   echo.value += "MQTT Enabled: " + String(Mqtt_Enabled == true ? "true" : "false") + "<br>";
-  echo.value = "Server: " + serverName;
-  echo.value = " Port: " + Mqtt_Port;
+  echo.value += "Server: " + serverName + "<br>";
+  echo.value += " Port: " + Mqtt_Port + "<br>";
   echo.value += "<br>USername: " + Mqtt_Username + "<br>";
   echo.value += "Password: " + Mqtt_Password + "<br>";
   echo.value += "Topic: " + Mqtt_Topic + "<br><br>";
