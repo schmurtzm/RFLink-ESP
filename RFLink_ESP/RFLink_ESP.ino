@@ -318,7 +318,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
         "type": "ACInput",
         "value": "RFlink-ESP",
         "label": "Hostname",
-        "pattern": "^\d*[a-z][a-z0-9!^(){}\-_~]*$"
+        "pattern": "^\\d*[a-z][a-z0-9!^(){}\\-_~]*$"
         
       },
       {
@@ -326,7 +326,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
         "type": "ACInput",
         "value": "",
         "label": "@NTP server 1",
-        "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$",
+        "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
         "placeholder": "pool.ntp.org if empty"
       },
       {
@@ -334,7 +334,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
         "type": "ACInput",
         "value": "",
         "label": "@NTP server 2",
-        "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$",
+        "pattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
         "placeholder": "time.nist.gov if empty"
       },
       {
@@ -342,7 +342,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
         "type": "ACInput",
         "value": "",
         "label": "Timezone (GMT)",
-        "pattern": "^[-+]?[1-9]\d*\.?[0]*$",
+        "pattern": "^[-+]?[1-9]\\d*\\.?[0]*$",
         "placeholder": "between -12 and +14"
       },
       {
@@ -350,7 +350,7 @@ static const char AUX_settings[] PROGMEM = R"raw(
         "type": "ACInput",
         "value": "",
         "label": "DST",
-        "pattern": "^[-+]?[1-9]\d*\.?[0]*$",
+        "pattern": "^[-+]?[1-9]\\d*\\.?[0]*$",
         "placeholder": "Daylight Saving Time in minutes"
       },
       {
@@ -513,8 +513,8 @@ String saveParams(AutoConnectAux& aux, PageArgument& args) {
   // Echo back saved parameters to AutoConnectAux page.
   AutoConnectText&  echo = aux["parameters"].as<AutoConnectText>();
   echo.value += "MQTT Enabled: " + String(Mqtt_Enabled == true ? "true" : "false") + "<br>";
-  echo.value = "Server: " + serverName;
-  echo.value = " Port: " + Mqtt_Port;
+  echo.value += "Server: " + serverName + "<br>";
+  echo.value += " Port: " + Mqtt_Port + "<br>";
   echo.value += "<br>USername: " + Mqtt_Username + "<br>";
   echo.value += "Password: " + Mqtt_Password + "<br>";
   echo.value += "Topic: " + Mqtt_Topic + "<br><br>";
